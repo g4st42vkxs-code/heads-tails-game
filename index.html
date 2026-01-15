@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heads & Tails</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #1a1a2e; color: white; text-align: center; padding: 20px; min-height: 100vh; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 20px; }
+        h1 { color: #00d4ff; margin: 20px 0; font-size: 2.5em; text-shadow: 0 0 10px #00d4ff; }
+        .subtitle { color: #aaa; margin-bottom: 30px; }
+        .balance { font-size: 3em; color: #00ff88; margin: 30px 0; text-shadow: 0 0 10px #00ff88; }
+        .coin { width: 150px; height: 150px; background: gold; border-radius: 50%; margin: 30px auto; border: 5px solid orange; }
+        .buttons { display: flex; gap: 20px; margin: 20px 0; }
+        button { flex: 1; padding: 20px; font-size: 1.2em; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; }
+        .heads { background: linear-gradient(orange, darkorange); }
+        .tails { background: linear-gradient(gray, darkgray); }
+        .action-buttons { display: flex; gap: 15px; margin-top: 30px; }
+        .deposit { background: linear-gradient(green, darkgreen); }
+        .withdraw { background: linear-gradient(red, darkred); }
+        button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .min-bet { color: #ffaa00; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 HEADS & TAILS 🎮</h1>
+        <div class="subtitle">25% chance to win ×2</div>
+        <div class="balance">0.00 USDT</div>
+        <div class="min-bet">Min bet: 0.25 USDT</div>
+        <div class="coin"></div>
+        <div class="buttons">
+            <button class="heads">HEADS</button>
+            <button class="tails">TAILS</button>
+        </div>
+        <div class="action-buttons">
+            <button class="deposit">DEPOSIT</button>
+            <button class="withdraw">WITHDRAW</button>
+        </div>
+    </div>
+    
+    <script>
+        // Telegram WebApp
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.expand();
+            Telegram.WebApp.ready();
+            console.log('Telegram WebApp loaded');
+        }
+        
+        // Game logic
+        let balance = 0.00;
+        
+        document.querySelector('.heads').onclick = () => {
+            playGame('heads');
+        };
+        document.querySelector('.tails').onclick = () => {
+            playGame('tails');
+        };
+        
+        document.querySelector('.deposit').onclick = () => {
+            const amount = prompt('Deposit amount (USDT):', '10.00');
+            if (amount && !isNaN(amount)) {
+                balance += parseFloat(amount);
+                updateBalance();
+                alert(`Deposited ${amount} USDT!\nNew balance: ${balance.toFixed(2)} USDT`);
+            }
+        };
+        
+        document.querySelector('.withdraw').onclick = () => {
+            const amount = prompt('Withdrawal amount (USDT):', '5.00');
+            if (amount && !isNaN(amount)) {
+                if (parseFloat(amount) <= balance) {
+                    balance -= parseFloat(amount);
+                    updateBalance();
+                    alert(`Withdrawal request for ${amount} USDT submitted!`);
+                } else {
+                    alert('Insufficient balance!');
+                }
+            }
+        };
+        
+        function playGame(side) {
+            const bet = 0.25;
+            if (balance < bet) {
+                alert(`Minimum bet is ${bet} USDT!\nPlease deposit first.`);
+                return;
+            }
+            
+            // 25% chance to win
+            const isWin = Math.random() < 0.25;
+            const winAmount = bet * 2;
+            
+            if (isWin) {
+                balance += winAmount;
+                alert(`🎉 WIN! +${winAmount.toFixed(2)} USDT\nYou chose ${side.toUpperCase()}`);
+            } else {
+                balance -= bet;
+                alert(`😢 LOSE! -${bet.toFixed(2)} USDT\nYou chose ${side.toUpperCase()}`);
+            }
+            
+            updateBalance();
+        }
+        
+        function updateBalance() {
+            document.querySelector('.balance').textContent = balance.toFixed(2) + ' USDT';
+        }
+    </script>
+</body>
+</html>
