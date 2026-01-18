@@ -3,16 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heads & Tails - Multi Themed</title>
+    <title>Heads & Tails - UFC Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
-        body { background: #0f1419; color: white; min-height: 100vh; }
+        body { 
+            background: #0a0a0a;
+            color: white;
+            min-height: 100vh;
+            background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), 
+                              url('https://i.imgur.com/3qJX9Za.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
         
         .app-container {
             max-width: 500px;
             margin: 0 auto;
             padding: 15px;
+            background: rgba(20, 20, 20, 0.85);
+            min-height: 100vh;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid rgba(255,255,255,0.1);
         }
         
         /* Header */
@@ -22,20 +35,22 @@
             align-items: center;
             margin-bottom: 20px;
             padding: 15px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(200, 16, 46, 0.2);
             border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(200, 16, 46, 0.5);
+            box-shadow: 0 5px 15px rgba(200, 16, 46, 0.2);
         }
         
         .game-title {
-            color: #00d4ff;
+            color: #ffd700;
             font-size: 1.8rem;
             font-weight: bold;
-            text-shadow: 0 0 10px rgba(0,212,255,0.5);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            letter-spacing: 1px;
         }
         
         .theme-selector-btn {
-            background: linear-gradient(45deg, #8a2be2, #9400d3);
+            background: linear-gradient(45deg, #c8102e, #8b0000);
             color: white;
             border: none;
             padding: 10px 15px;
@@ -45,59 +60,86 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .theme-selector-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(200, 16, 46, 0.4);
         }
         
         /* Balance */
         .balance-container {
-            background: linear-gradient(135deg, #1a2b3c, #0d1824);
+            background: linear-gradient(135deg, rgba(20,20,20,0.9), rgba(40,40,40,0.9));
             border-radius: 15px;
             padding: 20px;
             text-align: center;
             margin-bottom: 20px;
-            border: 2px solid #00d4ff;
-            box-shadow: 0 5px 15px rgba(0,212,255,0.2);
+            border: 2px solid #ffd700;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .balance-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            z-index: 0;
         }
         
         .balance-label {
             color: #aaa;
             font-size: 1rem;
             margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
         }
         
         .balance-amount {
             font-size: 2.8rem;
             font-weight: bold;
             color: #00ff88;
-            text-shadow: 0 0 10px rgba(0,255,136,0.5);
+            text-shadow: 0 0 15px rgba(0,255,136,0.7);
+            position: relative;
+            z-index: 1;
         }
         
         /* Theme Info */
         .theme-info {
             text-align: center;
             margin: 15px 0;
-            padding: 10px;
-            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            background: rgba(200, 16, 46, 0.15);
             border-radius: 10px;
+            border: 1px solid rgba(200, 16, 46, 0.3);
         }
         
         .theme-name {
-            color: #ffaa00;
-            font-size: 1.2rem;
+            color: #ffd700;
+            font-size: 1.3rem;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .theme-sides {
-            color: #aaa;
-            font-size: 0.9rem;
+            color: #ff6b6b;
+            font-size: 1rem;
             margin-top: 5px;
+            font-weight: 500;
         }
         
         /* Coin Container */
         .coin-container {
             position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
+            width: 220px;
+            height: 220px;
+            margin: 25px auto;
             perspective: 1000px;
         }
         
@@ -121,25 +163,64 @@
             justify-content: center;
             overflow: hidden;
             border: 8px solid;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.5),
-                        0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8),
+                        0 15px 40px rgba(0,0,0,0.7);
         }
         
-        .side-a { transform: rotateY(0deg); }
-        .side-b { transform: rotateY(180deg); }
+        .side-a { 
+            transform: rotateY(0deg);
+            border-color: #00a8ff;
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+        }
         
-        .side-content {
-            font-size: 2.5rem;
+        .side-b { 
+            transform: rotateY(180deg);
+            border-color: #c8102e;
+            background: linear-gradient(135deg, #8b0000, #ff416c);
+        }
+        
+        .coin-image {
+            width: 85%;
+            height: 85%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .fighter-name {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
             font-weight: bold;
+            font-size: 1.1rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 2px solid;
+        }
+        
+        .side-a .fighter-name {
+            border-color: #00a8ff;
+            background: rgba(0, 168, 255, 0.8);
+        }
+        
+        .side-b .fighter-name {
+            border-color: #c8102e;
+            background: rgba(200, 16, 46, 0.8);
         }
         
         /* Bet Controls */
         .bet-controls {
-            background: rgba(255,255,255,0.05);
+            background: rgba(40, 40, 40, 0.9);
             border-radius: 15px;
             padding: 20px;
             margin: 20px 0;
+            border: 2px solid rgba(255, 215, 0, 0.3);
         }
         
         .bet-amount {
@@ -152,22 +233,25 @@
             padding: 15px;
             font-size: 1.5rem;
             background: rgba(255,255,255,0.1);
-            border: 2px solid #00d4ff;
+            border: 2px solid #ffd700;
             border-radius: 10px;
             color: white;
             text-align: center;
             outline: none;
+            font-weight: bold;
         }
         
         .bet-amount input:focus {
             border-color: #00ff88;
-            box-shadow: 0 0 10px rgba(0,255,136,0.3);
+            box-shadow: 0 0 15px rgba(0,255,136,0.5);
+            background: rgba(0,255,136,0.1);
         }
         
         .min-bet {
             color: #ffaa00;
             font-size: 0.9rem;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-weight: bold;
         }
         
         /* Side Selection */
@@ -187,17 +271,52 @@
             cursor: pointer;
             color: white;
             transition: all 0.3s;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .side-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .side-btn:hover::before {
+            left: 100%;
         }
         
         .side-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         
         .side-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+        
+        .heads-btn { 
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            border: 3px solid #00a8ff;
+        }
+        
+        .tails-btn { 
+            background: linear-gradient(135deg, #8b0000, #ff416c);
+            border: 3px solid #c8102e;
+        }
+        
+        .side-btn-icon {
+            font-size: 1.5rem;
         }
         
         /* Action Buttons */
@@ -209,9 +328,9 @@
         
         .action-btn {
             flex: 1;
-            padding: 15px;
+            padding: 16px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
@@ -219,41 +338,58 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
         
-        .deposit-btn { background: linear-gradient(45deg, #00a86b, #008c5e); }
-        .withdraw-btn { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
-        .history-btn { background: linear-gradient(45deg, #8a2be2, #9400d3); }
+        .deposit-btn { 
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            border: 2px solid #00ff88;
+        }
+        
+        .withdraw-btn { 
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            border: 2px solid #ff5555;
+        }
+        
+        .history-btn { 
+            background: linear-gradient(135deg, #8a2be2, #9400d3);
+            border: 2px solid #9b59b6;
+        }
         
         /* Result */
         .result-message {
             text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             display: none;
             animation: fadeIn 0.5s;
+            border: 3px solid;
+            backdrop-filter: blur(10px);
         }
         
         .win { 
             background: rgba(0,255,136,0.2); 
             color: #00ff88; 
-            border: 1px solid #00ff88; 
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
         }
         
         .lose { 
             background: rgba(255,85,85,0.2); 
             color: #ff5555; 
-            border: 1px solid #ff5555; 
+            border-color: #ff5555;
+            box-shadow: 0 0 20px rgba(255,85,85,0.3);
         }
         
         /* Modals */
@@ -269,24 +405,29 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            backdrop-filter: blur(5px);
         }
         
         .modal-content {
-            background: #1a1a2e;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
             border-radius: 20px;
             padding: 25px;
             max-width: 500px;
             width: 100%;
-            border: 2px solid #00d4ff;
-            max-height: 80vh;
+            border: 3px solid #ffd700;
+            max-height: 85vh;
             overflow-y: auto;
+            box-shadow: 0 0 40px rgba(255,215,0,0.3);
         }
         
         .modal-title {
-            color: #00d4ff;
+            color: #ffd700;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
         }
         
         .themes-grid {
@@ -304,51 +445,70 @@
             transition: all 0.3s;
             border: 2px solid transparent;
             text-align: center;
+            backdrop-filter: blur(5px);
         }
         
         .theme-card:hover {
-            transform: translateY(-5px);
-            border-color: #00d4ff;
-            background: rgba(0,212,255,0.1);
+            transform: translateY(-5px) scale(1.02);
+            border-color: #ffd700;
+            background: rgba(255,215,0,0.1);
+            box-shadow: 0 10px 20px rgba(255,215,0,0.2);
         }
         
         .theme-card.active {
             border-color: #00ff88;
-            background: rgba(0,255,136,0.1);
+            background: rgba(0,255,136,0.15);
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
         }
         
         .theme-icon {
             font-size: 2.5rem;
             margin-bottom: 10px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .theme-card-name {
             font-weight: bold;
             margin-bottom: 5px;
             color: white;
+            font-size: 1.1rem;
         }
         
         .theme-card-sides {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #aaa;
         }
         
         /* Animations */
         @keyframes flip {
             0% { transform: translateY(0) rotateX(0); }
-            25% { transform: translateY(-100px) rotateX(180deg); }
-            50% { transform: translateY(-200px) rotateX(360deg); }
-            75% { transform: translateY(-100px) rotateX(540deg); }
-            100% { transform: translateY(0) rotateX(720deg); }
+            20% { transform: translateY(-120px) rotateX(180deg); }
+            40% { transform: translateY(-200px) rotateX(360deg); }
+            60% { transform: translateY(-120px) rotateX(540deg); }
+            80% { transform: translateY(-50px) rotateX(720deg); }
+            100% { transform: translateY(0) rotateX(1080deg); }
         }
         
         .flipping {
-            animation: flip 2s cubic-bezier(0.4, 0.2, 0.2, 1);
+            animation: flip 2.5s cubic-bezier(0.4, 0.2, 0.2, 1);
         }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
         }
         
         /* Responsive */
@@ -360,6 +520,10 @@
             .side-selection {
                 flex-direction: column;
             }
+            
+            .game-title {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -367,32 +531,34 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header">
-            <div class="game-title">🎮 HEADS & TAILS</div>
+            <div class="game-title">🥊 UFC HEADS & TAILS</div>
             <button class="theme-selector-btn" onclick="openThemeSelector()">
-                <span>🎨</span> Themes
+                <span>🎭</span> THEMES
             </button>
         </div>
         
         <!-- Balance -->
         <div class="balance-container">
-            <div class="balance-label">BALANCE</div>
+            <div class="balance-label">FIGHT BALANCE</div>
             <div class="balance-amount" id="balance">0.00 USDT</div>
         </div>
         
         <!-- Current Theme Info -->
         <div class="theme-info">
-            <div class="theme-name" id="currentThemeName">Fire vs Ice</div>
-            <div class="theme-sides" id="currentThemeSides">🔥 Fire (Heads) vs ❄️ Ice (Tails)</div>
+            <div class="theme-name" id="currentThemeName">UFC LEGENDS</div>
+            <div class="theme-sides" id="currentThemeSides">🥊 KHABIB vs CONNOR 🥊</div>
         </div>
         
         <!-- Coin -->
         <div class="coin-container">
             <div class="coin" id="coin">
                 <div class="coin-side side-a" id="sideA">
-                    <div class="side-content">🔥</div>
+                    <img src="https://i.ibb.co/7VM7XjL/habib-anime.png" alt="Khabib" class="coin-image">
+                    <div class="fighter-name">KHABIB</div>
                 </div>
                 <div class="coin-side side-b" id="sideB">
-                    <div class="side-content">❄️</div>
+                    <img src="https://i.ibb.co/LpJkR4N/connor-anime.png" alt="Connor" class="coin-image">
+                    <div class="fighter-name">CONNOR</div>
                 </div>
             </div>
         </div>
@@ -400,13 +566,17 @@
         <!-- Bet Controls -->
         <div class="bet-controls">
             <div class="bet-amount">
-                <input type="number" id="betAmount" placeholder="Enter bet amount" step="0.25" min="0.25" value="0.25">
-                <div class="min-bet">Minimum bet: 0.25 USDT</div>
+                <input type="number" id="betAmount" placeholder="ENTER BET AMOUNT" step="0.25" min="0.25" value="0.25">
+                <div class="min-bet">MINIMUM BET: 0.25 USDT</div>
             </div>
             
             <div class="side-selection">
-                <button class="side-btn" id="headsBtn" onclick="selectSide('heads')">HEADS</button>
-                <button class="side-btn" id="tailsBtn" onclick="selectSide('tails')">TAILS</button>
+                <button class="side-btn heads-btn" id="headsBtn" onclick="selectSide('heads')">
+                    <span class="side-btn-icon">🥋</span> KHABIB
+                </button>
+                <button class="side-btn tails-btn" id="tailsBtn" onclick="selectSide('tails')">
+                    <span class="side-btn-icon">🥊</span> CONNOR
+                </button>
             </div>
         </div>
         
@@ -419,10 +589,10 @@
                 <span>💳</span> DEPOSIT
             </button>
             <button class="action-btn withdraw-btn" onclick="withdraw()">
-                <span>🏧</span> WITHDRAW
+                <span>🏆</span> WITHDRAW
             </button>
             <button class="action-btn history-btn" onclick="showHistory()">
-                <span>📊</span> STATS
+                <span>📈</span> STATS
             </button>
         </div>
     </div>
@@ -430,34 +600,34 @@
     <!-- Theme Selector Modal -->
     <div class="modal" id="themeModal">
         <div class="modal-content">
-            <div class="modal-title">🎨 SELECT THEME</div>
+            <div class="modal-title">🎭 SELECT FIGHT THEME</div>
             <div class="themes-grid" id="themesGrid">
                 <!-- Themes will be loaded here -->
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button onclick="closeThemeSelector()" style="padding: 12px 30px; background: #ff416c; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
+            <div style="text-align: center; margin-top: 25px;">
+                <button onclick="closeThemeSelector()" style="padding: 14px 40px; background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
                     CLOSE
                 </button>
             </div>
         </div>
     </div>
     
-    <!-- Withdraw Modal (упрощенная версия) -->
+    <!-- Withdraw Modal -->
     <div class="modal" id="withdrawModal">
         <div class="modal-content">
-            <div class="modal-title">🏧 WITHDRAW USDT</div>
+            <div class="modal-title">🏆 WITHDRAW USDT</div>
             <div style="margin: 20px 0;">
-                <input type="number" id="withdrawAmount" placeholder="Amount (USDT)" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid #00d4ff; border-radius: 10px; color: white; font-size: 1em;">
+                <input type="number" id="withdrawAmount" placeholder="AMOUNT (USDT)" style="width: 100%; padding: 16px; background: rgba(255,255,255,0.1); border: 2px solid #00d4ff; border-radius: 12px; color: white; font-size: 1.1em; font-weight: bold; text-align: center;">
             </div>
             <div style="margin: 20px 0;">
-                <input type="text" id="walletAddress" placeholder="Your USDT wallet address" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid #00d4ff; border-radius: 10px; color: white; font-size: 1em;">
+                <input type="text" id="walletAddress" placeholder="YOUR USDT WALLET ADDRESS" style="width: 100%; padding: 16px; background: rgba(255,255,255,0.1); border: 2px solid #00d4ff; border-radius: 12px; color: white; font-size: 1.1em; font-weight: bold;">
             </div>
-            <div style="color: #aaa; font-size: 0.9em; margin-bottom: 20px;">
-                Available: <span id="availableBalance" style="color: #00ff88;">0.00</span> USDT
+            <div style="color: #aaa; font-size: 1em; margin-bottom: 25px; text-align: center;">
+                AVAILABLE: <span id="availableBalance" style="color: #00ff88; font-size: 1.2em; font-weight: bold;">0.00</span> USDT
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="submitWithdrawal()" style="flex: 1; padding: 15px; background: green; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">SUBMIT</button>
-                <button onclick="closeWithdrawModal()" style="flex: 1; padding: 15px; background: red; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">CANCEL</button>
+            <div style="display: flex; gap: 15px;">
+                <button onclick="submitWithdrawal()" style="flex: 1; padding: 16px; background: linear-gradient(135deg, #00b09b, #96c93d); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem;">SUBMIT</button>
+                <button onclick="closeWithdrawModal()" style="flex: 1; padding: 16px; background: linear-gradient(135deg, #ff416c, #ff4b2b); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.1rem;">CANCEL</button>
             </div>
         </div>
     </div>
@@ -465,41 +635,60 @@
     <script>
         // ==================== ТЕМЫ ====================
         const THEMES = {
+            ufc_legends: {
+                id: 'ufc_legends',
+                name: 'UFC LEGENDS',
+                sideA: { 
+                    name: 'KHABIB', 
+                    icon: '🥋',
+                    image: 'https://i.ibb.co/7VM7XjL/habib-anime.png',
+                    color: '#00a8ff',
+                    bgColor: 'linear-gradient(135deg, #1a2980, #26d0ce)'
+                },
+                sideB: { 
+                    name: 'CONNOR', 
+                    icon: '🥊',
+                    image: 'https://i.ibb.co/LpJkR4N/connor-anime.png',
+                    color: '#c8102e',
+                    bgColor: 'linear-gradient(135deg, #8b0000, #ff416c)'
+                },
+                bgImage: 'https://i.imgur.com/3qJX9Za.jpg'
+            },
             fire_ice: {
                 id: 'fire_ice',
-                name: 'Fire vs Ice',
-                sideA: { name: 'Fire', emoji: '🔥', color: '#ff6b6b', borderColor: '#ff3838', bgColor: 'linear-gradient(135deg, #ff6b6b, #ff3838)' },
-                sideB: { name: 'Ice', emoji: '❄️', color: '#74b9ff', borderColor: '#0984e3', bgColor: 'linear-gradient(135deg, #74b9ff, #0984e3)' }
+                name: 'FIRE vs ICE',
+                sideA: { 
+                    name: 'FIRE', 
+                    icon: '🔥',
+                    image: 'https://i.imgur.com/fire-icon.png',
+                    color: '#ff6b6b',
+                    bgColor: 'linear-gradient(135deg, #ff6b6b, #ff3838)'
+                },
+                sideB: { 
+                    name: 'ICE', 
+                    icon: '❄️',
+                    image: 'https://i.imgur.com/ice-icon.png',
+                    color: '#74b9ff',
+                    bgColor: 'linear-gradient(135deg, #74b9ff, #0984e3)'
+                }
             },
-            habib_connor: {
-                id: 'habib_connor',
-                name: 'UFC Legends',
-                sideA: { name: 'Khabib', emoji: '🥋', color: '#00b894', borderColor: '#00a085', bgColor: 'linear-gradient(135deg, #00b894, #00a085)' },
-                sideB: { name: 'Connor', emoji: '🥊', color: '#dfe6e9', borderColor: '#b2bec3', bgColor: 'linear-gradient(135deg, #dfe6e9, #b2bec3)' }
-            },
-            earth_water: {
-                id: 'earth_water',
-                name: 'Earth vs Water',
-                sideA: { name: 'Earth', emoji: '🌍', color: '#a55e3b', borderColor: '#8b4513', bgColor: 'linear-gradient(135deg, #a55e3b, #8b4513)' },
-                sideB: { name: 'Water', emoji: '💧', color: '#1e90ff', borderColor: '#187bcd', bgColor: 'linear-gradient(135deg, #1e90ff, #187bcd)' }
-            },
-            lenin_stalin: {
-                id: 'lenin_stalin',
-                name: 'USSR Leaders',
-                sideA: { name: 'Lenin', emoji: '⚒️', color: '#ff3838', borderColor: '#c23616', bgColor: 'linear-gradient(135deg, #ff3838, #c23616)' },
-                sideB: { name: 'Stalin', emoji: '★', color: '#fdcb6e', borderColor: '#e17055', bgColor: 'linear-gradient(135deg, #fdcb6e, #e17055)' }
-            },
-            ronaldo_messi: {
-                id: 'ronaldo_messi',
-                name: 'Football GOATs',
-                sideA: { name: 'Ronaldo', emoji: '🇵🇹', color: '#c23616', borderColor: '#a52714', bgColor: 'linear-gradient(135deg, #c23616, #a52714)' },
-                sideB: { name: 'Messi', emoji: '🇦🇷', color: '#74b9ff', borderColor: '#0984e3', bgColor: 'linear-gradient(135deg, #74b9ff, #0984e3)' }
-            },
-            sun_moon: {
-                id: 'sun_moon',
-                name: 'Sun vs Moon',
-                sideA: { name: 'Sun', emoji: '☀️', color: '#ff9f43', borderColor: '#f0932b', bgColor: 'linear-gradient(135deg, #ff9f43, #f0932b)' },
-                sideB: { name: 'Moon', emoji: '🌙', color: '#6c5ce7', borderColor: '#5b4fcf', bgColor: 'linear-gradient(135deg, #6c5ce7, #5b4fcf)' }
+            football_goats: {
+                id: 'football_goats',
+                name: 'FOOTBALL GOATS',
+                sideA: { 
+                    name: 'RONALDO', 
+                    icon: '🇵🇹',
+                    image: 'https://i.imgur.com/ronaldo-icon.png',
+                    color: '#c23616',
+                    bgColor: 'linear-gradient(135deg, #c23616, #a52714)'
+                },
+                sideB: { 
+                    name: 'MESSI', 
+                    icon: '🇦🇷',
+                    image: 'https://i.imgur.com/messi-icon.png',
+                    color: '#74b9ff',
+                    bgColor: 'linear-gradient(135deg, #74b9ff, #0984e3)'
+                }
             }
         };
 
@@ -507,13 +696,15 @@
         let balance = 0.00;
         let selectedSide = null;
         let isSpinning = false;
-        let currentTheme = 'fire_ice';
+        let currentTheme = 'ufc_legends';
         let gameStats = {
             gamesPlayed: 0,
             wins: 0,
             losses: 0,
             totalWagered: 0,
-            totalWon: 0
+            totalWon: 0,
+            currentStreak: 0,
+            maxStreak: 0
         };
 
         // ==================== ИНИЦИАЛИЗАЦИЯ ====================
@@ -525,7 +716,16 @@
             if (window.Telegram && Telegram.WebApp) {
                 Telegram.WebApp.expand();
                 Telegram.WebApp.ready();
+                Telegram.WebApp.setHeaderColor('#c8102e');
+                Telegram.WebApp.setBackgroundColor('#0a0a0a');
             }
+            
+            // Показать приветственное сообщение
+            setTimeout(() => {
+                if (gameStats.gamesPlayed === 0) {
+                    showResult('🥊 WELCOME TO UFC HEADS & TAILS! 🥊\n\nChoose your fighter and place your bet!', 'win');
+                }
+            }, 1000);
         });
 
         // ==================== СИСТЕМА ТЕМ ====================
@@ -537,13 +737,11 @@
                 const card = document.createElement('div');
                 card.className = `theme-card ${theme.id === currentTheme ? 'active' : ''}`;
                 card.onclick = () => selectTheme(theme.id);
-                
                 card.innerHTML = `
-                    <div class="theme-icon">${theme.sideA.emoji} vs ${theme.sideB.emoji}</div>
+                    <div class="theme-icon">${theme.sideA.icon} vs ${theme.sideB.icon}</div>
                     <div class="theme-card-name">${theme.name}</div>
                     <div class="theme-card-sides">${theme.sideA.name} vs ${theme.sideB.name}</div>
                 `;
-                
                 grid.appendChild(card);
             });
         }
@@ -553,6 +751,12 @@
             applyTheme(themeId);
             loadThemes();
             saveGameState();
+            
+            // Анимация переключения темы
+            document.querySelector('.coin-container').classList.add('pulse');
+            setTimeout(() => {
+                document.querySelector('.coin-container').classList.remove('pulse');
+            }, 500);
         }
         
         function applyTheme(themeId) {
@@ -561,29 +765,49 @@
             // Обновляем информацию о теме
             document.getElementById('currentThemeName').textContent = theme.name;
             document.getElementById('currentThemeSides').textContent = 
-                `${theme.sideA.emoji} ${theme.sideA.name} (Heads) vs ${theme.sideB.emoji} ${theme.sideB.name} (Tails)`;
+                `${theme.sideA.icon} ${theme.sideA.name} vs ${theme.sideB.icon} ${theme.sideB.name}`;
             
             // Обновляем кнопки выбора стороны
-            document.getElementById('headsBtn').innerHTML = `${theme.sideA.emoji} ${theme.sideA.name.toUpperCase()}`;
-            document.getElementById('tailsBtn').innerHTML = `${theme.sideB.emoji} ${theme.sideB.name.toUpperCase()}`;
+            document.getElementById('headsBtn').innerHTML = 
+                `<span class="side-btn-icon">${theme.sideA.icon}</span> ${theme.sideA.name}`;
+            document.getElementById('tailsBtn').innerHTML = 
+                `<span class="side-btn-icon">${theme.sideB.icon}</span> ${theme.sideB.name}`;
             
             // Обновляем цвета кнопок
             document.getElementById('headsBtn').style.background = theme.sideA.bgColor;
             document.getElementById('tailsBtn').style.background = theme.sideB.bgColor;
+            document.getElementById('headsBtn').style.borderColor = theme.sideA.color;
+            document.getElementById('tailsBtn').style.borderColor = theme.sideB.color;
             
-            // Обновляем монетку
-            const sideA = document.getElementById('sideA');
-            const sideB = document.getElementById('sideB');
+            // Обновляем монетку (если есть изображения)
+            if (theme.sideA.image && theme.sideA.image.includes('http')) {
+                const sideAImg = document.querySelector('#sideA .coin-image');
+                const sideBImg = document.querySelector('#sideB .coin-image');
+                const sideAName = document.querySelector('#sideA .fighter-name');
+                const sideBName = document.querySelector('#sideB .fighter-name');
+                
+                if (sideAImg) sideAImg.src = theme.sideA.image;
+                if (sideBImg) sideBImg.src = theme.sideB.image;
+                if (sideAName) sideAName.textContent = theme.sideA.name;
+                if (sideBName) sideBName.textContent = theme.sideB.name;
+                
+                // Обновляем цвета бордеров и имен
+                document.getElementById('sideA').style.borderColor = theme.sideA.color;
+                document.getElementById('sideB').style.borderColor = theme.sideB.color;
+                document.getElementById('sideA').style.background = theme.sideA.bgColor;
+                document.getElementById('sideB').style.background = theme.sideB.bgColor;
+                
+                sideAName.style.borderColor = theme.sideA.color;
+                sideAName.style.background = theme.sideA.color.replace(')', ', 0.8)').replace('rgb', 'rgba');
+                sideBName.style.borderColor = theme.sideB.color;
+                sideBName.style.background = theme.sideB.color.replace(')', ', 0.8)').replace('rgb', 'rgba');
+            }
             
-            sideA.style.background = theme.sideA.bgColor;
-            sideA.style.borderColor = theme.sideA.borderColor;
-            sideA.querySelector('.side-content').textContent = theme.sideA.emoji;
-            sideA.querySelector('.side-content').style.color = theme.sideA.color;
-            
-            sideB.style.background = theme.sideB.bgColor;
-            sideB.style.borderColor = theme.sideB.borderColor;
-            sideB.querySelector('.side-content').textContent = theme.sideB.emoji;
-            sideB.querySelector('.side-content').style.color = theme.sideB.color;
+            // Обновляем фон страницы если есть
+            if (theme.bgImage) {
+                document.body.style.backgroundImage = 
+                    `linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), url('${theme.bgImage}')`;
+            }
         }
         
         function openThemeSelector() {
@@ -603,7 +827,7 @@
             if (betAmount >= 0.25 && balance >= betAmount) {
                 playGame();
             } else {
-                alert(balance < betAmount ? 'Insufficient balance!' : 'Minimum bet is 0.25 USDT!');
+                showResult(balance < betAmount ? '❌ INSUFFICIENT BALANCE!' : '⚠️ MINIMUM BET IS 0.25 USDT!', 'lose');
             }
         }
         
@@ -614,7 +838,8 @@
             if (betAmount < 0.25 || betAmount > balance) return;
             
             isSpinning = true;
-            document.getElementById('coin').classList.add('flipping');
+            const coin = document.getElementById('coin');
+            coin.classList.add('flipping');
             document.getElementById('resultMessage').style.display = 'none';
             document.querySelectorAll('button').forEach(btn => btn.disabled = true);
             
@@ -625,43 +850,51 @@
             setTimeout(() => {
                 const isWin = Math.random() < 0.25;
                 const winningSide = Math.random() < 0.5 ? 'heads' : 'tails';
+                const theme = THEMES[currentTheme];
                 
                 if (isWin && selectedSide === winningSide) {
                     const winAmount = betAmount * 2;
                     balance += winAmount;
                     gameStats.wins++;
                     gameStats.totalWon += winAmount;
-                    showResult(`🎉 WIN! +${winAmount.toFixed(2)} USDT`, 'win');
+                    gameStats.currentStreak++;
+                    if (gameStats.currentStreak > gameStats.maxStreak) {
+                        gameStats.maxStreak = gameStats.currentStreak;
+                    }
+                    
+                    showResult(`🥊🎉 KNOCKOUT! YOU WIN!\n+${winAmount.toFixed(2)} USDT`, 'win');
                     
                     // Показываем выигравшую сторону
-                    if (winningSide === 'heads') {
-                        document.getElementById('coin').style.transform = 'rotateY(0deg)';
-                    } else {
-                        document.getElementById('coin').style.transform = 'rotateY(180deg)';
-                    }
+                    coin.style.transform = winningSide === 'heads' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+                    
+                    // Анимация победы
+                    setTimeout(() => {
+                        coin.classList.add('pulse');
+                        setTimeout(() => coin.classList.remove('pulse'), 500);
+                    }, 300);
+                    
                 } else {
                     balance -= betAmount;
                     gameStats.losses++;
-                    showResult(`😢 LOSE! -${betAmount.toFixed(2)} USDT`, 'lose');
+                    gameStats.currentStreak = 0;
+                    
+                    const fighterName = selectedSide === 'heads' ? theme.sideA.name : theme.sideB.name;
+                    showResult(`😢 TAP OUT! ${fighterName} LOST!\n-${betAmount.toFixed(2)} USDT`, 'lose');
                     
                     // Показываем фактическую сторону
-                    if (winningSide === 'heads') {
-                        document.getElementById('coin').style.transform = 'rotateY(0deg)';
-                    } else {
-                        document.getElementById('coin').style.transform = 'rotateY(180deg)';
-                    }
+                    coin.style.transform = winningSide === 'heads' ? 'rotateY(0deg)' : 'rotateY(180deg)';
                 }
                 
                 updateBalance();
                 saveGameState();
                 
                 setTimeout(() => {
-                    document.getElementById('coin').classList.remove('flipping');
+                    coin.classList.remove('flipping');
                     isSpinning = false;
                     document.querySelectorAll('button').forEach(btn => btn.disabled = false);
-                }, 1000);
+                }, 1500);
                 
-            }, 2000);
+            }, 2500);
         }
         
         function showResult(message, type) {
@@ -669,6 +902,13 @@
             el.textContent = message;
             el.className = `result-message ${type}`;
             el.style.display = 'block';
+            
+            // Автоматическое скрытие через 5 секунд
+            setTimeout(() => {
+                if (el.style.display === 'block') {
+                    el.style.display = 'none';
+                }
+            }, 5000);
         }
 
         // ==================== БАЛАНС И СОХРАНЕНИЕ ====================
@@ -681,111 +921,4 @@
                 balance: balance,
                 currentTheme: currentTheme,
                 stats: gameStats,
-                lastPlayed: new Date().toISOString()
-            };
-            localStorage.setItem('heads_tails_game', JSON.stringify(gameData));
-        }
-        
-        function loadGameState() {
-            const saved = localStorage.getItem('heads_tails_game');
-            if (saved) {
-                const data = JSON.parse(saved);
-                balance = data.balance || 0;
-                currentTheme = data.currentTheme || 'fire_ice';
-                gameStats = data.stats || gameStats;
-                updateBalance();
-            }
-        }
-
-        // ==================== ДЕПОЗИТ И ВЫВОД ====================
-        function deposit() {
-            const walletAddress = "TG1ZPKvACH1NAxqeaaEfoKK1C7Gbus8au8";
-            const amount = prompt("Enter deposit amount (USDT):\nMinimum: 5 USDT", "10");
-            
-            if (amount && !isNaN(amount) && parseFloat(amount) >= 5) {
-                const message = `📥 DEPOSIT INSTRUCTIONS:\n\n` +
-                               `Send exactly: ${amount} USDT\n` +
-                               `To address: ${walletAddress}\n\n` +
-                               `Network: TRC20 (Tron)\n` +
-                               `After sending, balance updates automatically.\n` +
-                               `Copy address: ${walletAddress}`;
-                
-                alert(message);
-                
-                navigator.clipboard.writeText(walletAddress)
-                    .then(() => console.log("Address copied"))
-                    .catch(err => console.log("Copy failed:", err));
-            } else if (amount) {
-                alert('Minimum deposit: 5 USDT');
-            }
-        }
-        
-        function withdraw() {
-            if (balance < 0.25) {
-                alert('Minimum withdrawal is 0.25 USDT!');
-                return;
-            }
-            
-            document.getElementById('withdrawModal').style.display = 'flex';
-            document.getElementById('withdrawAmount').value = '';
-            document.getElementById('walletAddress').value = '';
-            document.getElementById('availableBalance').textContent = balance.toFixed(2);
-        }
-        
-        function closeWithdrawModal() {
-            document.getElementById('withdrawModal').style.display = 'none';
-        }
-        
-        async function submitWithdrawal() {
-            const amount = parseFloat(document.getElementById('withdrawAmount').value);
-            const address = document.getElementById('walletAddress').value.trim();
-            
-            if (!amount || amount < 0.25) {
-                alert('Minimum withdrawal is 0.25 USDT!');
-                return;
-            }
-            
-            if (amount > balance) {
-                alert('Insufficient balance!');
-                return;
-            }
-            
-            if (!address || address.length < 10) {
-                alert('Please enter valid wallet address!');
-                return;
-            }
-            
-            balance -= amount;
-            updateBalance();
-            saveGameState();
-            
-            alert(`✅ Withdrawal request submitted!\nAmount: ${amount.toFixed(2)} USDT\n\nAdmin will process within 24 hours.`);
-            closeWithdrawModal();
-        }
-
-        // ==================== СТАТИСТИКА ====================
-        function showHistory() {
-            const winRate = gameStats.gamesPlayed > 0 ? 
-                Math.round((gameStats.wins / gameStats.gamesPlayed) * 100) : 0;
-            
-            const message = `📊 YOUR STATISTICS:\n\n` +
-                           `Games played: ${gameStats.gamesPlayed}\n` +
-                           `Wins: ${gameStats.wins}\n` +
-                           `Losses: ${gameStats.losses}\n` +
-                           `Win rate: ${winRate}%\n\n` +
-                           `Total wagered: ${gameStats.totalWagered.toFixed(2)} USDT\n` +
-                           `Total won: ${gameStats.totalWon.toFixed(2)} USDT\n\n` +
-                           `Current balance: ${balance.toFixed(2)} USDT`;
-            
-            alert(message);
-        }
-
-        // ==================== УПРАВЛЕНИЕ ВВОДОМ ====================
-        document.getElementById('betAmount').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && selectedSide) {
-                playGame();
-            }
-        });
-    </script>
-</body>
-</html>
+                lastPlayed: new Date().toISO
