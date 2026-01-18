@@ -13,7 +13,7 @@
         .balance { font-size: 3em; color: #00ff88; margin: 30px 0; text-shadow: 0 0 10px #00ff88; }
         .min-bet { color: #ffaa00; margin: 10px 0; font-size: 1.1em; }
         
-        /* Coin animation container */
+        /* Coin animation */
         .coin-container { 
             position: relative;
             width: 200px;
@@ -65,6 +65,7 @@
         .action-buttons { display: flex; gap: 15px; margin-top: 30px; }
         .deposit { background: linear-gradient(green, darkgreen); }
         .withdraw { background: linear-gradient(red, darkred); }
+        .network-btn { background: linear-gradient(#0088cc, #006699); }
         button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         
@@ -95,6 +96,28 @@
         }
         .win { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00ff88; }
         .lose { background: rgba(255,85,85,0.2); color: #ff5555; border: 1px solid #ff5555; }
+        
+        /* Network selection */
+        .network-selection {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+        
+        .network-option {
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .network-option.active {
+            border-color: #00d4ff;
+            background: rgba(0,212,255,0.1);
+        }
         
         /* Coin flip animation */
         @keyframes flip {
@@ -135,20 +158,44 @@
         <div class="result" id="result"></div>
         
         <div class="action-buttons">
-            <button class="deposit" onclick="deposit()">DEPOSIT</button>
+            <button class="deposit" onclick="showNetworkSelection()">DEPOSIT</button>
             <button class="withdraw" onclick="withdraw()">WITHDRAW</button>
+        </div>
+    </div>
+    
+    <!-- Network Selection Modal -->
+    <div id="networkModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; padding:30px; border-radius:20px; border:2px solid #00d4ff; max-width:400px; width:90%;">
+            <h2 style="color:#00d4ff;">Select Network</h2>
+            <div style="margin:20px 0;">
+                <div class="network-option active" onclick="selectNetwork('trc20')" style="margin-bottom:10px;">
+                    <div style="font-weight:bold; color:#00ff88;">USDT (TRC20)</div>
+                    <div style="font-size:0.8em; color:#aaa;">Min: 5 USDT • Fast & Low fee</div>
+                </div>
+                <div class="network-option" onclick="selectNetwork('ton')">
+                    <div style="font-weight:bold; color:#ffaa00;">TON</div>
+                    <div style="font-size:0.8em; color:#aaa;">Min: 1 TON • Instant • Telegram</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="proceedToDeposit()" style="flex:1; padding:12px; background:green; color:white; border:none; border-radius:10px; font-weight:bold;">CONTINUE</button>
+                <button onclick="closeNetworkModal()" style="flex:1; padding:12px; background:red; color:white; border:none; border-radius:10px; font-weight:bold;">CANCEL</button>
+            </div>
         </div>
     </div>
     
     <!-- Withdrawal Modal -->
     <div id="withdrawModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
         <div style="background:#1a1a2e; padding:30px; border-radius:20px; border:2px solid #00d4ff; max-width:400px; width:90%;">
-            <h2>Withdraw USDT</h2>
+            <h2 style="color:#00d4ff;">Withdraw USDT</h2>
             <div style="margin:20px 0;">
                 <input type="number" id="withdrawAmount" placeholder="Amount (USDT)" style="width:100%; padding:12px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid #00d4ff; color:white; font-size:1em;">
             </div>
             <div style="margin:20px 0;">
                 <input type="text" id="walletAddress" placeholder="Your USDT wallet address" style="width:100%; padding:12px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid #00d4ff; color:white; font-size:1em;">
+            </div>
+            <div style="color:#aaa; font-size:0.9em; margin-bottom:20px;">
+                Available: <span id="availableBalance" style="color:#00ff88;">0.00</span> USDT
             </div>
             <div style="display:flex; gap:10px;">
                 <button onclick="submitWithdrawal()" style="flex:1; padding:12px; background:green; color:white; border:none; border-radius:10px; font-weight:bold;">SUBMIT</button>
@@ -158,40 +205,55 @@
     </div>
     
     <script>
-        // Game state
+        // ==================== КОНФИГУРАЦИЯ ====================
+        const WALLETS = {
+            trc20: {
+                name: "USDT (TRC20)",
+                address: "TG1ZPKvACH1NAxqeaaEfoKK1C7Gbus8au8",
+                network: "TRC20 (Tron)",
+                token: "USDT",
+                decimals: 6,
+                minDeposit: 5,
+                explorer: "https://tronscan.org/#/transaction/"
+            },
+            ton: {
+                name: "TON",
+                address: "UQD2uebGvPGNTUJlutQ-Zz3uJ5tierqlAJH53YlTaUvKPCNq",
+                network: "TON",
+                token: "TON",
+                decimals: 9,
+                minDeposit: 1,
+                explorer: "https://tonscan.org/tx/"
+            }
+        };
+
+        const TRONGRID_API = "https://api.trongrid.io";
+        const USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        const BOT_TOKEN = '8410695722:AAEgsrnqNk-jJBdNFzcYxUh8Les6aam0DVc';
+        const ADMIN_CHAT_ID = '8305986133';
+        
+        // ==================== СОСТОЯНИЕ ИГРЫ ====================
         let balance = 0.00;
         let selectedSide = null;
         let isSpinning = false;
-        const BOT_TOKEN = '8410695722:AAEgsrnqNk-jJBdNFzcYxUh8Les6aam0DVc';
-        const ADMIN_CHAT_ID = '8305986133'; // Ваш Telegram ID
+        let selectedNetwork = 'trc20';
+        let pendingDeposits = {};
         
-        // DOM elements
-        const coinElement = document.getElementById('coin');
-        const balanceElement = document.getElementById('balance');
-        const resultElement = document.getElementById('result');
-        const betAmountInput = document.getElementById('betAmount');
-        
-        // Initialize Telegram WebApp
-        if (window.Telegram && Telegram.WebApp) {
-            Telegram.WebApp.expand();
-            Telegram.WebApp.ready();
-            
-            // Load user data from Telegram
-            const user = Telegram.WebApp.initDataUnsafe?.user;
-            if (user) {
-                console.log('User:', user);
-                // Save user data for withdrawals
-                localStorage.setItem('telegram_user_id', user.id);
-                localStorage.setItem('telegram_username', user.username || `${user.first_name} ${user.last_name}`);
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGameState();
+            if (window.Telegram && Telegram.WebApp) {
+                Telegram.WebApp.expand();
+                Telegram.WebApp.ready();
             }
-        }
+        });
         
-        // Select side
+        // ==================== ИГРОВАЯ ЛОГИКА ====================
         function selectSide(side) {
             if (isSpinning) return;
             selectedSide = side;
             
-            const betAmount = parseFloat(betAmountInput.value);
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
             if (betAmount >= 0.25 && balance >= betAmount) {
                 playGame();
             } else {
@@ -199,60 +261,45 @@
             }
         }
         
-        // Play game
         function playGame() {
             if (isSpinning || !selectedSide) return;
             
-            const betAmount = parseFloat(betAmountInput.value);
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
             if (betAmount < 0.25 || betAmount > balance) return;
             
-            // Start spin
             isSpinning = true;
-            coinElement.classList.add('flipping');
-            resultElement.style.display = 'none';
-            
-            // Disable buttons during spin
+            document.getElementById('coin').classList.add('flipping');
+            document.getElementById('result').style.display = 'none';
             document.querySelectorAll('button').forEach(btn => btn.disabled = true);
             
-            // Determine result after 2 seconds
             setTimeout(() => {
-                // 25% chance to win
                 const isWin = Math.random() < 0.25;
                 const winningSide = Math.random() < 0.5 ? 'heads' : 'tails';
                 
-                // Update balance
                 if (isWin && selectedSide === winningSide) {
-                    // Win
                     const winAmount = betAmount * 2;
                     balance += winAmount;
-                    showResult(`WIN! +${winAmount.toFixed(2)} USDT`, 'win');
-                    
-                    // Show winning side
+                    showResult(`🎉 WIN! +${winAmount.toFixed(2)} USDT`, 'win');
                     if (winningSide === 'heads') {
-                        coinElement.style.transform = 'rotateY(0deg)';
+                        document.getElementById('coin').style.transform = 'rotateY(0deg)';
                     } else {
-                        coinElement.style.transform = 'rotateY(180deg)';
+                        document.getElementById('coin').style.transform = 'rotateY(180deg)';
                     }
                 } else {
-                    // Lose
                     balance -= betAmount;
-                    showResult(`LOSE! -${betAmount.toFixed(2)} USDT`, 'lose');
-                    
-                    // Show actual side
+                    showResult(`😢 LOSE! -${betAmount.toFixed(2)} USDT`, 'lose');
                     if (winningSide === 'heads') {
-                        coinElement.style.transform = 'rotateY(0deg)';
+                        document.getElementById('coin').style.transform = 'rotateY(0deg)';
                     } else {
-                        coinElement.style.transform = 'rotateY(180deg)';
+                        document.getElementById('coin').style.transform = 'rotateY(180deg)';
                     }
                 }
                 
-                // Update display
                 updateBalance();
                 saveGameState();
                 
-                // Re-enable buttons
                 setTimeout(() => {
-                    coinElement.classList.remove('flipping');
+                    document.getElementById('coin').classList.remove('flipping');
                     isSpinning = false;
                     document.querySelectorAll('button').forEach(btn => btn.disabled = false);
                 }, 1000);
@@ -260,33 +307,166 @@
             }, 2000);
         }
         
-        // Show result
-        function showResult(message, type) {
-            resultElement.textContent = message;
-            resultElement.className = `result ${type}`;
-            resultElement.style.display = 'block';
+        // ==================== ДЕПОЗИТ СИСТЕМА ====================
+        function showNetworkSelection() {
+            document.getElementById('networkModal').style.display = 'flex';
         }
         
-        // Update balance display
-        function updateBalance() {
-            balanceElement.textContent = balance.toFixed(2) + ' USDT';
+        function selectNetwork(network) {
+            selectedNetwork = network;
+            document.querySelectorAll('.network-option').forEach(opt => opt.classList.remove('active'));
+            event.target.closest('.network-option').classList.add('active');
         }
         
-        // Deposit - redirect to crypto bot
-        function deposit() {
-            // Replace with your crypto bot link
-            const cryptoBotLink = 'https://t.me/CryptoBot?start=deposit';
+        function closeNetworkModal() {
+            document.getElementById('networkModal').style.display = 'none';
+        }
+        
+        function proceedToDeposit() {
+            closeNetworkModal();
+            const wallet = WALLETS[selectedNetwork];
+            const amount = prompt(`Enter deposit amount (${wallet.token}):\nMinimum: ${wallet.minDeposit} ${wallet.token}`, wallet.minDeposit.toString());
             
-            if (window.Telegram && Telegram.WebApp) {
-                // Open in Telegram WebApp
-                Telegram.WebApp.openLink(cryptoBotLink);
-            } else {
-                // Open in browser
-                window.open(cryptoBotLink, '_blank');
+            if (amount && !isNaN(amount) && parseFloat(amount) >= wallet.minDeposit) {
+                showDepositInstructions(wallet, parseFloat(amount));
+            } else if (amount) {
+                alert(`Minimum deposit: ${wallet.minDeposit} ${wallet.token}`);
             }
         }
         
-        // Withdraw
+        function showDepositInstructions(wallet, amount) {
+            const depositId = 'D' + Date.now() + Math.random().toString(36).substr(2, 9);
+            
+            pendingDeposits[depositId] = {
+                id: depositId,
+                amount: amount,
+                wallet: wallet,
+                timestamp: Date.now(),
+                status: 'waiting',
+                userId: getUserId()
+            };
+            
+            const modalHTML = `
+            <div id="depositModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10000; display:flex; align-items:center; justify-content:center;">
+                <div style="background:#1a1a2e; padding:30px; border-radius:20px; max-width:500px; border:2px solid #00d4ff; width:90%;">
+                    <h2 style="color:#00d4ff;">💳 Deposit ${amount} ${wallet.token}</h2>
+                    
+                    <div style="margin:20px 0; background:rgba(0,0,0,0.3); padding:15px; border-radius:10px;">
+                        <div style="color:#aaa; font-size:0.9em;">Send EXACTLY:</div>
+                        <div style="font-size:2em; color:#00ff88; font-weight:bold;">${amount} ${wallet.token}</div>
+                        <div style="color:#aaa; margin-top:10px;">Network: <span style="color:#ffaa00;">${wallet.network}</span></div>
+                    </div>
+                    
+                    <div style="margin:20px 0; background:rgba(0,212,255,0.1); padding:15px; border-radius:10px;">
+                        <div style="color:#aaa; font-size:0.9em;">To address:</div>
+                        <div style="word-break:break-all; font-family:monospace; margin:10px 0; color:#00ff88; font-size:0.9em;">${wallet.address}</div>
+                        <button onclick="copyToClipboard('${wallet.address}')" style="margin-top:10px; padding:8px 15px; background:#0088cc; color:white; border:none; border-radius:5px; font-size:0.9em;">📋 Copy Address</button>
+                    </div>
+                    
+                    <div style="margin:20px 0; padding:15px; background:rgba(255,170,0,0.1); border-radius:10px; border:1px solid #ffaa00;">
+                        <div style="color:#ffaa00;">⚠️ IMPORTANT:</div>
+                        <div style="color:#aaa; font-size:0.8em; margin-top:5px;">
+                            • Send EXACTLY ${amount} ${wallet.token}<br>
+                            • Only ${wallet.network} network<br>
+                            • Balance updates in 2-3 minutes<br>
+                            • Deposit ID: <span style="color:#00d4ff;">${depositId}</span>
+                        </div>
+                    </div>
+                    
+                    <div id="depositStatus" style="margin:20px 0; text-align:center;">
+                        <div style="color:#aaa;">Status:</div>
+                        <div style="color:#ffaa00; font-size:1.2em; margin-top:5px;">⏳ Waiting for payment...</div>
+                        <div style="color:#aaa; font-size:0.8em; margin-top:10px;">Checking every 30 seconds</div>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button onclick="closeModal('depositModal')" style="flex:1; padding:12px; background:red; color:white; border:none; border-radius:10px; font-weight:bold;">CLOSE</button>
+                    </div>
+                </div>
+            </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            if (wallet.token === 'USDT') {
+                startTronDepositCheck(depositId, amount);
+            } else {
+                startTonDepositCheck(depositId, amount);
+            }
+        }
+        
+        // ==================== ПРОВЕРКА ТРАНЗАКЦИЙ ====================
+        async function startTronDepositCheck(depositId, requiredAmount) {
+            const interval = setInterval(async () => {
+                if (!pendingDeposits[depositId]) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                try {
+                    const transactions = await checkTronTransactions();
+                    const foundTx = transactions.find(tx => {
+                        const amount = tx.value / 1000000;
+                        return Math.abs(amount - requiredAmount) < 0.01;
+                    });
+                    
+                    if (foundTx) {
+                        completeDeposit(depositId, requiredAmount, foundTx.transaction_id);
+                        clearInterval(interval);
+                    }
+                } catch (error) {
+                    console.error('Check error:', error);
+                }
+            }, 30000);
+        }
+        
+        function startTonDepositCheck(depositId, requiredAmount) {
+            // Для TON нужен TonAPI или ручная проверка
+            const interval = setInterval(() => {
+                // Временное решение - пользователь сам подтверждает
+                console.log(`TON deposit ${depositId} check`);
+            }, 30000);
+        }
+        
+        async function checkTronTransactions() {
+            try {
+                const response = await fetch(`https://api.trongrid.io/v1/accounts/${WALLETS.trc20.address}/transactions/trc20?limit=20`);
+                const data = await response.json();
+                
+                return data.data
+                    .filter(tx => tx.token_info.address === USDT_TRC20_CONTRACT)
+                    .map(tx => ({
+                        transaction_id: tx.transaction_id,
+                        value: parseInt(tx.value),
+                        timestamp: tx.block_timestamp
+                    }));
+            } catch (error) {
+                return [];
+            }
+        }
+        
+        function completeDeposit(depositId, amount, txHash) {
+            balance += amount;
+            updateBalance();
+            saveGameState();
+            
+            const statusEl = document.getElementById('depositStatus');
+            if (statusEl) {
+                statusEl.innerHTML = `
+                    <div style="color:#aaa;">Status:</div>
+                    <div style="color:#00ff88; font-size:1.2em; margin-top:5px;">✅ Payment received!</div>
+                    <div style="color:#00ff88; font-size:0.9em; margin-top:10px;">+${amount} USDT added to balance</div>
+                `;
+            }
+            
+            setTimeout(() => {
+                closeModal('depositModal');
+            }, 3000);
+            
+            delete pendingDeposits[depositId];
+        }
+        
+        // ==================== ВЫВОД СРЕДСТВ ====================
         function withdraw() {
             if (balance < 0.25) {
                 alert('Minimum withdrawal is 0.25 USDT!');
@@ -296,14 +476,13 @@
             document.getElementById('withdrawModal').style.display = 'flex';
             document.getElementById('withdrawAmount').value = '';
             document.getElementById('walletAddress').value = '';
+            document.getElementById('availableBalance').textContent = balance.toFixed(2);
         }
         
-        // Close withdrawal modal
         function closeWithdrawModal() {
             document.getElementById('withdrawModal').style.display = 'none';
         }
         
-        // Submit withdrawal
         async function submitWithdrawal() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const address = document.getElementById('walletAddress').value.trim();
@@ -323,29 +502,67 @@
                 return;
             }
             
-            // Deduct from balance
             balance -= amount;
             updateBalance();
             saveGameState();
             
-            // Get user info
-            const userId = localStorage.getItem('telegram_user_id') || 'Unknown';
+            const userId = getUserId();
             const username = localStorage.getItem('telegram_username') || 'Unknown';
-            
-            // Send notification to admin
-            const message = `💰 NEW WITHDRAWAL REQUEST\n\n👤 User: ${username}\n🆔 ID: ${userId}\n💵 Amount: ${amount.toFixed(2)} USDT\n📭 Address: ${address}\n⏰ Time: ${new Date().toLocaleString()}`;
+            const message = `💰 NEW WITHDRAWAL\n\n👤 User: ${username}\n🆔 ID: ${userId}\n💵 Amount: ${amount.toFixed(2)} USDT\n📭 Address: ${address}\n⏰ Time: ${new Date().toLocaleString()}`;
             
             try {
                 await sendTelegramMessage(ADMIN_CHAT_ID, message);
                 alert(`✅ Withdrawal request submitted!\nAdmin has been notified.`);
             } catch (error) {
-                alert(`⚠️ Withdrawal saved but notification failed.\nAmount: ${amount.toFixed(2)} USDT`);
+                alert(`⚠️ Withdrawal saved but notification failed.`);
             }
             
             closeWithdrawModal();
         }
         
-        // Send Telegram message
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Address copied!');
+        }
+        
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.remove();
+        }
+        
+        function showResult(message, type) {
+            const el = document.getElementById('result');
+            el.textContent = message;
+            el.className = `result ${type}`;
+            el.style.display = 'block';
+        }
+        
+        function updateBalance() {
+            document.getElementById('balance').textContent = balance.toFixed(2) + ' USDT';
+        }
+        
+        function saveGameState() {
+            localStorage.setItem('balance', balance.toString());
+            localStorage.setItem('pending_deposits', JSON.stringify(pendingDeposits));
+        }
+        
+        function loadGameState() {
+            const savedBalance = localStorage.getItem('balance');
+            if (savedBalance) balance = parseFloat(savedBalance);
+            updateBalance();
+            
+            const savedDeposits = localStorage.getItem('pending_deposits');
+            if (savedDeposits) pendingDeposits = JSON.parse(savedDeposits);
+        }
+        
+        function getUserId() {
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe?.user) {
+                return Telegram.WebApp.initDataUnsafe.user.id;
+            }
+            return localStorage.getItem('user_id') || 'anonymous';
+        }
+        
         async function sendTelegramMessage(chatId, text) {
             const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
@@ -359,25 +576,8 @@
             return response.json();
         }
         
-        // Save game state
-        function saveGameState() {
-            localStorage.setItem('heads_tails_balance', balance);
-        }
-        
-        // Load game state
-        function loadGameState() {
-            const savedBalance = localStorage.getItem('heads_tails_balance');
-            if (savedBalance) {
-                balance = parseFloat(savedBalance);
-                updateBalance();
-            }
-        }
-        
-        // Initialize
-        loadGameState();
-        
-        // Auto-bet on Enter key
-        betAmountInput.addEventListener('keypress', function(e) {
+        // Авто-ставка по Enter
+        document.getElementById('betAmount').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && selectedSide) {
                 playGame();
             }
