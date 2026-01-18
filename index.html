@@ -660,14 +660,14 @@
                 sideA: { 
                     name: 'FIRE', 
                     icon: '🔥',
-                    image: 'https://i.imgur.com/fire-icon.png',
+                    image: '',
                     color: '#ff6b6b',
                     bgColor: 'linear-gradient(135deg, #ff6b6b, #ff3838)'
                 },
                 sideB: { 
                     name: 'ICE', 
                     icon: '❄️',
-                    image: 'https://i.imgur.com/ice-icon.png',
+                    image: '',
                     color: '#74b9ff',
                     bgColor: 'linear-gradient(135deg, #74b9ff, #0984e3)'
                 }
@@ -678,14 +678,14 @@
                 sideA: { 
                     name: 'RONALDO', 
                     icon: '🇵🇹',
-                    image: 'https://i.imgur.com/ronaldo-icon.png',
+                    image: '',
                     color: '#c23616',
                     bgColor: 'linear-gradient(135deg, #c23616, #a52714)'
                 },
                 sideB: { 
                     name: 'MESSI', 
                     icon: '🇦🇷',
-                    image: 'https://i.imgur.com/messi-icon.png',
+                    image: '',
                     color: '#74b9ff',
                     bgColor: 'linear-gradient(135deg, #74b9ff, #0984e3)'
                 }
@@ -921,4 +921,10 @@
                 balance: balance,
                 currentTheme: currentTheme,
                 stats: gameStats,
-                lastPlayed: new Date().toISO
+                lastPlayed: new Date().toISOString()
+            };
+            localStorage.setItem('heads_tails_game', JSON.stringify(gameData));
+        }
+        
+        function loadGameState() {
+            const saved = localStorage.getItem('heads_tails
